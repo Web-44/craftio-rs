@@ -394,7 +394,7 @@ where
         Ok(Some(v))
     }
 
-    async fn ensure_n_ready_async(&mut self, n: usize) -> ReadResult<&[u8]> {
+    pub async fn ensure_n_ready_async(&mut self, n: usize) -> ReadResult<&[u8]> {
         if self.raw_ready < n {
             let to_read = n - self.raw_ready;
             let target =
