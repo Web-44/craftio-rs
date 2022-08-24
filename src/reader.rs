@@ -533,7 +533,7 @@ impl<R> CraftReader<R> {
         Ok(Some((id, body_buf)))
     }
 
-    fn read_packet_in_buf<'a, P>(&'a mut self, size: usize) -> ReadResult<P>
+    pub fn read_packet_in_buf<'a, P>(&'a mut self, size: usize) -> ReadResult<P>
     where
         P: RawPacket<'a>,
     {
