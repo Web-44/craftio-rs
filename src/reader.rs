@@ -142,7 +142,7 @@ pub trait CraftSyncReader {
 /// This type holds some internal buffers but only allocates them when they are required.
 ///
 pub struct CraftReader<R> {
-    inner: R,
+    pub inner: R,
     raw_buf: Option<Vec<u8>>,
     raw_ready: usize,
     raw_offset: usize,
