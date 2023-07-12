@@ -151,7 +151,7 @@ pub struct CraftReader<R> {
     decompress_buf: Option<Vec<u8>>,
     #[cfg(feature = "compression")]
     compression_threshold: Option<i32>,
-    state: State,
+    pub state: State,
     direction: PacketDirection,
     #[cfg(feature = "encryption")]
     encryption: Option<CraftCipher>,
