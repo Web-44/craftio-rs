@@ -15,6 +15,7 @@ use {
 pub struct CraftConnection<R, W> {
     pub(crate) reader: CraftReader<R>,
     pub(crate) writer: CraftWriter<W>,
+    pub state: State
 }
 
 impl<R, W> CraftWrapper<(R, W)> for CraftConnection<R, W> {
@@ -27,6 +28,7 @@ impl<R, W> CraftIo for CraftConnection<R, W> {
     fn set_state(&mut self, next: State) {
         self.reader.set_state(next);
         self.writer.set_state(next);
+        self.state = next;
     }
 
     #[cfg(feature = "compression")]

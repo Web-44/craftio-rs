@@ -184,7 +184,7 @@ pub struct CraftWriter<W> {
     compress_buf: Option<Vec<u8>>,
     #[cfg(feature = "compression")]
     compression_threshold: Option<i32>,
-    pub state: State,
+    state: State,
     direction: PacketDirection,
     #[cfg(feature = "encryption")]
     encryption: Option<CraftCipher>,
