@@ -55,6 +55,7 @@ impl CraftTcpConnection {
         Ok(Self {
             reader: CraftReader::wrap_with_state(read, read_direction, state),
             writer: CraftWriter::wrap_with_state(write, read_direction.opposite(), state),
+            state
         })
     }
 }
@@ -118,6 +119,7 @@ where
         Self {
             reader: CraftReader::wrap_with_state(reader, read_direction, state),
             writer: CraftWriter::wrap_with_state(writer, read_direction.opposite(), state),
+            state
         }
     }
 }
