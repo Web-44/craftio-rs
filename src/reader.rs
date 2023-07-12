@@ -476,7 +476,7 @@ impl<R> CraftReader<R> {
         }
     }
 
-    fn read_untyped_packet_in_buf(&mut self, size: usize) -> ReadResult<(Id, &[u8])>
+    pub fn read_untyped_packet_in_buf(&mut self, size: usize) -> ReadResult<(Id, &[u8])>
     {
         // find data in buf
         let offset = self.raw_offset;
