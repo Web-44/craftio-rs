@@ -1,5 +1,3 @@
-#[cfg(feature = "encryption")]
-use crate::cfb8::{setup_craft_cipher, CipherError, CraftCipher};
 use crate::util::{get_sized_buf, VAR_INT_BUF_SIZE};
 use crate::wrapper::{CraftIo, CraftWrapper};
 #[cfg(feature = "compression")]
@@ -15,6 +13,9 @@ use std::io;
 use thiserror::Error;
 #[cfg(any(feature = "futures-io", feature = "tokio-io"))]
 use async_trait::async_trait;
+#[cfg(feature = "encryption")]
+use crate::cfb8::{CipherError, setup_craft_cipher};
+use crate::cfb8::CraftCipher;
 
 pub const DEAFULT_MAX_PACKET_SIZE: usize = 32 * 1000 * 1000; // 32MB
 
@@ -151,7 +152,7 @@ pub struct CraftReader<R> {
     decompress_buf: Option<Vec<u8>>,
     #[cfg(feature = "compression")]
     compression_threshold: Option<i32>,
-    state: State,
+    pub state: State,
     direction: PacketDirection,
     #[cfg(feature = "encryption")]
     encryption: Option<CraftCipher>,
@@ -334,6 +335,10 @@ where
             let target =
                 get_sized_buf(&mut self.raw_buf, self.raw_offset + self.raw_ready, to_read);
             check_unexpected_eof!(self.inner.read_exact(target));
+
+            #[cfg(feature = "encryption")]
+            handle_decryption(self.encryption.as_mut(), target);
+
             self.raw_ready = n;
         }
 
@@ -401,6 +406,10 @@ where
                 get_sized_buf(&mut self.raw_buf, self.raw_offset + self.raw_ready, to_read);
             debug_assert_eq!(target.len(), to_read);
             check_unexpected_eof!(self.inner.read_exact(target).await);
+
+            #[cfg(feature = "encryption")]
+            handle_decryption(self.encryption.as_mut(), target);
+
             self.raw_ready = n;
         }
 
@@ -487,10 +496,6 @@ impl<R> CraftReader<R> {
         self.raw_offset += size;
         let buf =
             &mut self.raw_buf.as_mut().expect("should exist right now")[offset..offset + size];
-        // decrypt the packet if encryption is enabled
-        #[cfg(feature = "encryption")]
-        handle_decryption(self.encryption.as_mut(), buf);
-
         // try to get the packet body bytes... this boils down to:
         // * check if compression enabled,
         //    * read data len (VarInt) which isn't compressed
@@ -523,9 +528,9 @@ impl<R> CraftReader<R> {
         #[cfg(not(feature = "compression"))]
         let packet_buf = buf;
 
-        let (raw_id, body_buf) = dsz_unwrap!(packet_buf, VarInt);
+        let (VarInt(raw_id), body_buf) = dsz_unwrap!(packet_buf, VarInt);
         let id = Id {
-            id: raw_id.0,
+            id: raw_id,
             state: self.state.clone(),
             direction: self.direction.clone()
         };
@@ -564,8 +569,8 @@ impl<R> CraftReader<R> {
 
 #[cfg(feature = "encryption")]
 fn handle_decryption(cipher: Option<&mut CraftCipher>, buf: &mut [u8]) {
-    if let Some(encryption) = cipher {
-        encryption.decrypt(buf);
+    if let Some(cipher) = cipher {
+        cipher.decrypt(buf);
     }
 }
 

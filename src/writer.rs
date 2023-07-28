@@ -1,5 +1,3 @@
-#[cfg(feature = "encryption")]
-use crate::cfb8::{setup_craft_cipher, CipherError, CraftCipher};
 use crate::util::{get_sized_buf, move_data_rightwards, VAR_INT_BUF_SIZE};
 use crate::wrapper::{CraftIo, CraftWrapper};
 use crate::DEAFULT_MAX_PACKET_SIZE;
@@ -14,6 +12,8 @@ use std::ops::{Deref, DerefMut};
 use thiserror::Error;
 #[cfg(any(feature = "futures-io", feature = "tokio-io"))]
 use async_trait::async_trait;
+#[cfg(feature = "encryption")]
+use crate::cfb8::{CipherError, CraftCipher, setup_craft_cipher};
 
 #[derive(Debug, Error)]
 pub enum WriteError {
@@ -184,7 +184,7 @@ pub struct CraftWriter<W> {
     compress_buf: Option<Vec<u8>>,
     #[cfg(feature = "compression")]
     compression_threshold: Option<i32>,
-    state: State,
+    pub state: State,
     direction: PacketDirection,
     #[cfg(feature = "encryption")]
     encryption: Option<CraftCipher>,
@@ -606,19 +606,19 @@ fn prepare_packet_compressed_below_threshold(
 }
 
 #[cfg(feature = "encryption")]
-fn handle_encryption(encryption: Option<&mut CraftCipher>, buf: &mut [u8]) {
-    if let Some(encryption) = encryption {
-        encryption.encrypt(buf);
+fn handle_encryption(cipher: Option<&mut CraftCipher>, buf: &mut [u8]) {
+    if let Some(cipher) = cipher {
+        cipher.encrypt(buf);
     }
 }
 
 #[derive(Debug)]
-struct GrowVecSerializer<'a> {
-    target: &'a mut Option<Vec<u8>>,
-    at: usize,
-    offset: usize,
-    max_size: usize,
-    exceeded_max_size: bool,
+pub struct GrowVecSerializer<'a> {
+    pub target: &'a mut Option<Vec<u8>>,
+    pub at: usize,
+    pub offset: usize,
+    pub max_size: usize,
+    pub exceeded_max_size: bool,
 }
 
 impl<'a> Serializer for GrowVecSerializer<'a> {
@@ -655,9 +655,9 @@ impl<'a> GrowVecSerializer<'a> {
     }
 }
 
-struct SliceSerializer<'a> {
-    target: &'a mut [u8],
-    at: usize,
+pub struct SliceSerializer<'a> {
+    pub target: &'a mut [u8],
+    pub at: usize,
 }
 
 impl<'a> Serializer for SliceSerializer<'a> {

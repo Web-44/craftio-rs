@@ -1,6 +1,3 @@
-#[cfg(feature = "encryption")]
-use crate::cfb8::CipherError;
-use crate::reader::{CraftReader, CraftSyncReader, ReadResult};
 use crate::wrapper::{CraftIo, CraftWrapper};
 use crate::writer::{CraftSyncWriter, CraftWriter, WriteResult};
 use mcproto_rs::protocol::{Packet, RawPacket, State, Id};
@@ -11,6 +8,9 @@ use {
     crate::{reader::CraftAsyncReader, writer::CraftAsyncWriter},
     async_trait::async_trait,
 };
+#[cfg(feature = "encryption")]
+use crate::cfb8::CipherError;
+use crate::reader::{CraftReader, CraftSyncReader, ReadResult};
 
 pub struct CraftConnection<R, W> {
     pub(crate) reader: CraftReader<R>,
